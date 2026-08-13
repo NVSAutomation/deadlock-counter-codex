@@ -470,16 +470,23 @@ const itemImg = (name,cls)=>{ const s=ASSETS.items[name]; return s?`<img class="
 const roleVar = h => h.damageStyle==="bullet"?"gun":h.damageStyle==="spirit"?"spirit":"hybrid";
 const TIPS = window.__ITEMTIPS__ || {};
 const slotClass = s => s==="weapon"?"weapon":s==="spirit"?"spirit-i":"vitality";
+// Sanitize Valve's raw tooltip text: strip embedded input-glyph svg/img, tidy whitespace.
+const cleanDesc = html => (html||"").replace(/<svg[\s\S]*?<\/svg>/gi,"").replace(/<img\b[^>]*>/gi,"")
+  .replace(/\s{2,}/g," ").replace(/\s+([.,;:])/g,"$1").trim();
+// Drop sentinel values (9999 = "until released" / infinite).
+const goodStat = b => { const n=parseFloat(String(b.val).replace(/[^0-9.\-]/g,"")); return !(n>=9000); };
+const bigHTML = arr => { arr=(arr||[]).filter(goodStat); return arr.length?`<div class="tip-big">${arr.map(b=>`<div class="tip-bstat"><span class="bv">${b.val}</span><span class="bl">${b.label}</span></div>`).join("")}</div>`:""; };
+const smallHTML = arr => arr.length?`<div class="tip-small">${arr.map(b=>`<span class="tip-sstat"><b>${b.val}</b> ${b.label}</span>`).join("")}</div>`:"";
 function tipHTML(name){
   const t=TIPS[name]; if(!t) return "";
   const cost=t.cost?" · "+t.cost.toLocaleString()+" souls":"";
   const secs=t.sections.map(s=>{
-    const big=s.big.length?`<div class="tip-big">${s.big.map(b=>`<div class="tip-bstat"><span class="bv">${b.val}</span><span class="bl">${b.label}</span></div>`).join("")}</div>`:"";
-    const desc=s.desc?`<p class="tip-desc">${s.desc}</p>`:"";
-    const small=s.small.length?`<div class="tip-small">${s.small.map(b=>`<span class="tip-sstat"><b>${b.val}</b> ${b.label}</span>`).join("")}</div>`:"";
+    const big=bigHTML(s.big);
+    const desc=s.desc?`<p class="tip-desc">${cleanDesc(s.desc)}</p>`:"";
+    const small=smallHTML((s.small||[]).filter(goodStat));
     const kind=s.type==="active"?'<span class="tip-kind act">Active</span>':'<span class="tip-kind pas">Passive</span>';
-    return `<div class="tip-sec">${kind}${big}${desc}${small}</div>`;
-  }).join("");
+    return (big||desc||small)?`<div class="tip-sec">${kind}${big}${desc}${small}</div>`:"";
+  }).filter(Boolean).join("");
   return `<div class="tip-head ${slotClass(t.slot)}"><span class="tip-name">${name}</span><span class="tip-meta">${t.slot} · Tier ${t.tier}${cost}</span></div>${secs}`;
 }
 
@@ -487,12 +494,14 @@ const ABIL = window.__ABILITIES__ || {};
 function abilTipHTML(hero, idx){
   const ab=(ABIL[hero]||[])[idx]; if(!ab) return "";
   const label=ab.type==="ultimate"?"Ultimate":"Ability "+ab.slot;
+  const seen=new Set();
   const secs=ab.sections.map(s=>{
-    const big=s.big.length?`<div class="tip-big">${s.big.map(b=>`<div class="tip-bstat"><span class="bv">${b.val}</span><span class="bl">${b.label}</span></div>`).join("")}</div>`:"";
-    const desc=s.desc?`<p class="tip-desc">${s.desc}</p>`:"";
-    const small=s.small.length?`<div class="tip-small">${s.small.map(b=>`<span class="tip-sstat"><b>${b.val}</b> ${b.label}</span>`).join("")}</div>`:"";
-    return `<div class="tip-sec">${desc}${big}${small}</div>`;
-  }).join("");
+    const big=bigHTML(s.big);
+    const desc=s.desc?`<p class="tip-desc">${cleanDesc(s.desc)}</p>`:"";
+    const sm=(s.small||[]).filter(goodStat).filter(b=>{ if(seen.has(b.label)) return false; seen.add(b.label); return true; });
+    const small=smallHTML(sm);
+    return (desc||big||small)?`<div class="tip-sec">${desc}${big}${small}</div>`:"";
+  }).filter(Boolean).join("");
   return `<div class="tip-head abil"><span class="tip-name">${ab.name}</span><span class="tip-meta">${label}</span></div>${secs}`;
 }
 
