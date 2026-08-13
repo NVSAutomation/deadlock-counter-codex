@@ -405,7 +405,7 @@ const EFFECTS = {
   burst:{label:"Burst"}, bullet:{label:"Bullet storm"}, dot:{label:"Damage over time"}, zone:{label:"Zone"},
 };
 const THREAT_TAGS = new Set(Object.keys(EFFECTS));
-const CLEANSABLE = new Set(["stun","root","silence","disarm","slow","sleep","tether","dot"]);
+const CLEANSABLE = new Set(["stun","root","silence","disarm","slow","sleep","dot"]);
 
 // Channeled threat abilities. Interrupting the enemy stops them mid-cast.
 const CHANNELED = new Set([
@@ -457,9 +457,11 @@ function evaluate(hero, ab, item){
     else if (e==="slow" && has(item,"slowresist")) { reasons.push("<b>Shrug off the slow</b>."); kind=kind||"good"; }
     else if (CLEANSABLE.has(e)) {
       const cl=capVal(item,"cleanse");
-      if (cl==="all"){ reasons.push("<b>Cleanse the "+EFFECTS[e].label.toLowerCase()+"</b>."); hard=true; kind="good"; }
-      else if (cl==="nonult"){ if(ult) blocked.push("can't remove an <b>ultimate</b> effect"); else { reasons.push("<b>Cleanse the "+EFFECTS[e].label.toLowerCase()+"</b>."); hard=true; kind="good"; } }
-      else if (cl==="nonstun"){ if(e==="stun") blocked.push("does <b>not</b> clear stuns"); else { reasons.push("<b>Cleanse the "+EFFECTS[e].label.toLowerCase()+"</b>."); hard=true; kind="good"; } }
+      if (cl){
+        if (ult && cl!=="all") blocked.push("can't remove an <b>ultimate</b> effect");
+        else if (cl==="nonstun" && e==="stun") blocked.push("does <b>not</b> clear stuns");
+        else { reasons.push("<b>Cleanse the "+EFFECTS[e].label.toLowerCase()+"</b>."); hard=true; kind="good"; }
+      }
       if (has(item,"reduce")) reasons.push("Trim the <b>"+EFFECTS[e].label.toLowerCase()+"</b> duration.");
     }
   }
