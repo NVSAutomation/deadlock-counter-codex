@@ -476,7 +476,7 @@ function tipHTML(name){
     const big=s.big.length?`<div class="tip-big">${s.big.map(b=>`<div class="tip-bstat"><span class="bv">${b.val}</span><span class="bl">${b.label}</span></div>`).join("")}</div>`:"";
     const desc=s.desc?`<p class="tip-desc">${s.desc}</p>`:"";
     const small=s.small.length?`<div class="tip-small">${s.small.map(b=>`<span class="tip-sstat"><b>${b.val}</b> ${b.label}</span>`).join("")}</div>`:"";
-    const kind=s.type==="active"?'<span class="tip-kind act">Active</span>':`<span class="tip-kind pas">${s.type==="passive"?"Passive":s.type}</span>`;
+    const kind=s.type==="active"?'<span class="tip-kind act">Active</span>':'<span class="tip-kind pas">Passive</span>';
     return `<div class="tip-sec">${kind}${big}${desc}${small}</div>`;
   }).join("");
   return `<div class="tip-head ${slotClass(t.slot)}"><span class="tip-name">${name}</span><span class="tip-meta">${t.slot} · Tier ${t.tier}${cost}</span></div>${secs}`;
