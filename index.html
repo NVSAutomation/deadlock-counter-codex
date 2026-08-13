@@ -306,7 +306,6 @@
     <div class="legend">
       <span><i class="d" style="background:var(--good)"></i> Gets you out</span>
       <span><i class="d" style="background:var(--teal)"></i> Shut them down (use on them)</span>
-      <span><i class="d" style="background:var(--bad)"></i> Looks like a counter, won't work</span>
     </div>
     The counter logic runs off an effect-tag engine, so it stays consistent from one hero to the next. Kits and item stats come from live Deadlock data via <a href="https://deadlock.wiki" target="_blank" rel="noopener">deadlock.wiki</a> and the community API. The build numbers are a snapshot, so hit the <b>full builds</b> link on a hero to see what's actually meta today. Want to change something? All the <code>HEROES</code> and <code>ITEMS</code> data sits at the top of the script.
   </footer>
@@ -629,8 +628,8 @@ function heroDetail(h){
     if(!abilityIsThreat(ab)) return `<div class="ab harmless"><div class="ab-top"><span class="ab-name">${ab.name}</span><span class="ab-slot">${ab.kind==='ultimate'?'Ultimate':'Slot '+ab.slot}</span></div><p class="ab-desc">${ab.effect}</p></div>`;
     const res=ITEMS.map(it=>evaluate(h,ab,it)).filter(Boolean);
     const good=res.filter(r=>r.kind==="good"); const hardGood=good.filter(r=>r.hard); const softGood=good.filter(r=>!r.hard).slice(0,3);
-    const intr=res.filter(r=>r.kind==="interrupt"); const bad=res.filter(r=>r.kind==="bad");
-    const rows=[...hardGood,...softGood,...intr,...bad];
+    const intr=res.filter(r=>r.kind==="interrupt");
+    const rows=[...hardGood,...softGood,...intr];
     return `<div class="ab"><div class="ab-top"><span class="ab-name">${ab.name}</span><span class="ab-slot">${ab.kind==='ultimate'?'Ultimate':'Slot '+ab.slot}</span><span class="ab-eff">${effChips(ab.tags)}</span></div>
       <p class="ab-desc">${ab.effect}</p>
       ${rows.length?`<div class="answers">${rows.map(ansRow).join("")}</div>`:`<p class="no-counter">No item stops this one. You just have to dodge it. Watch your spacing and line of sight.</p>`}</div>`;
