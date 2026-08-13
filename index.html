@@ -187,6 +187,16 @@
   .tip-small { display:flex; flex-wrap:wrap; gap:4px 14px; }
   .tip-sstat { font-size:.78rem; color:var(--muted); font-variant-numeric:tabular-nums; }
   .tip-sstat b { color:var(--text); font-weight:700; }
+  .tip-counter { border-top:1px solid var(--line); }
+  .tip-clabel { font-size:.62rem; letter-spacing:.14em; text-transform:uppercase; font-weight:700; color:var(--teal); display:block; margin-bottom:8px; }
+  .tip-citems { display:flex; flex-wrap:wrap; gap:6px; }
+  .tip-citem { display:inline-flex; align-items:center; gap:5px; font-size:.77rem; font-weight:600; padding:3px 9px 3px 4px;
+    border-radius:99px; border:1px solid var(--line); background:var(--panel); color:var(--good); }
+  .tip-citem.interrupt { color:var(--teal); border-color:color-mix(in srgb,var(--teal) 45%,var(--line)); }
+  .tip-citem.good { border-color:color-mix(in srgb,var(--good) 45%,var(--line)); }
+  .tip-cico { width:18px; height:18px; border-radius:4px; object-fit:contain; background:var(--panel-2); flex:none; }
+  .tip-citem em { font-style:normal; font-size:.6rem; letter-spacing:.05em; text-transform:uppercase; opacity:.85; }
+
   .ans[data-tip] { cursor:help; }
   .ans[data-tip] .a-item { text-decoration:underline dotted; text-underline-offset:3px;
     text-decoration-color:color-mix(in srgb,currentColor 45%,transparent); }
@@ -491,6 +501,17 @@ function tipHTML(name){
 }
 
 const ABIL = window.__ABILITIES__ || {};
+// Items that hard-counter a given ability (matched to our tagged HEROES data by name).
+function abilCounters(hero, abName){
+  const H=HEROES.find(h=>h.name===hero); if(!H) return [];
+  const ab=H.abilities.find(a=>a.name.toLowerCase()===abName.toLowerCase());
+  if(!ab || !abilityIsThreat(ab)) return [];
+  const seen=new Set(), out=[];
+  ITEMS.forEach(it=>{ const r=evaluate(H,ab,it); if(r&&r.hard&&r.kind!=="bad"&&!seen.has(it.id)){ seen.add(it.id); out.push(r); } });
+  const good=out.filter(r=>r.kind==="good").slice(0,5);      // defensive: get yourself out
+  const intr=out.filter(r=>r.kind==="interrupt").slice(0,3); // offensive: shut them down
+  return [...good,...intr];
+}
 function abilTipHTML(hero, idx){
   const ab=(ABIL[hero]||[])[idx]; if(!ab) return "";
   const label=ab.type==="ultimate"?"Ultimate":"Ability "+ab.slot;
@@ -502,7 +523,10 @@ function abilTipHTML(hero, idx){
     const small=smallHTML(sm);
     return (desc||big||small)?`<div class="tip-sec">${desc}${big}${small}</div>`:"";
   }).filter(Boolean).join("");
-  return `<div class="tip-head abil"><span class="tip-name">${ab.name}</span><span class="tip-meta">${label}</span></div>${secs}`;
+  const cs=abilCounters(hero, ab.name);
+  const cblock=cs.length?`<div class="tip-sec tip-counter"><span class="tip-clabel">Countered by</span>
+    <div class="tip-citems">${cs.map(r=>`<span class="tip-citem ${r.kind}">${itemImg(r.item.name,"tip-cico")}${r.item.name}${r.kind==="interrupt"?' <em>on them</em>':''}</span>`).join("")}</div></div>`:"";
+  return `<div class="tip-head abil"><span class="tip-name">${ab.name}</span><span class="tip-meta">${label}</span></div>${secs}${cblock}`;
 }
 
 // Floating tooltip: hover on desktop, tap-to-pin elsewhere. Handles items and abilities.
