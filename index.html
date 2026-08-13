@@ -604,12 +604,6 @@ function rankCounters(h){
     ITEMS.forEach(it=>{ const r=evaluate(h,ab,it); if(r&&r.hard&&r.kind!=="bad"){ const e=(per[it.id]=per[it.id]||{item:it,ab:new Set(),k:new Set()}); e.ab.add(ab.name); e.k.add(r.kind); } }); });
   return Object.values(per).map(x=>({item:x.item,abils:[...x.ab],interrupt:x.k.has("interrupt")&&!x.k.has("good"),score:x.ab.size})).sort((a,b)=>b.score-a.score);
 }
-function blockedItems(h){
-  const seen={};
-  h.abilities.forEach(ab=>{ if(!abilityIsThreat(ab)) return;
-    ITEMS.forEach(it=>{ const r=evaluate(h,ab,it); if(r&&r.kind==="bad"&&!seen[it.id]) seen[it.id]=it.name; }); });
-  return Object.values(seen);
-}
 
 function heroDetail(h){
   const cps=rankCounters(h).slice(0,6);
@@ -618,8 +612,6 @@ function heroDetail(h){
      <div class="cp-main"><span class="cp-name">${x.item.name}${x.interrupt?' <em>on them</em>':''}</span>
        <span class="cp-how">${capPhrase(x.item)}</span>
        <span class="cp-vs">vs ${x.abils.slice(0,3).join(", ")}</span></div></div>`).join("");
-  const blocked=blockedItems(h);
-  const blockedLine=blocked.length?`<p class="cp-wont"><span class="wl">Don't bother buying:</span> ${blocked.join(", ")}. A cleanse can't pull off an ultimate's effect here, and it won't clear a stun either.</p>`:"";
 
   const abs=h.abilities.map(ab=>{
     if(!abilityIsThreat(ab)) return `<div class="ab harmless"><div class="ab-top"><span class="ab-name">${ab.name}</span><span class="ab-slot">${ab.kind==='ultimate'?'Ultimate':'Slot '+ab.slot}</span></div><p class="ab-desc">${ab.effect}</p></div>`;
@@ -649,8 +641,7 @@ function heroDetail(h){
 
     <div class="block cp-box"><h3>Top counterpicks</h3>
       <p class="sub">The items that answer the most of ${h.name}'s kit, best first. Hover any of them for the numbers.</p>
-      <div class="cp-grid">${cpCards||`<p class="empty">No item hard-counters ${h.name}. You beat this hero with positioning and timing, so save your slots for damage.</p>`}</div>
-      ${blockedLine}</div>
+      <div class="cp-grid">${cpCards||`<p class="empty">No item hard-counters ${h.name}. You beat this hero with positioning and timing, so save your slots for damage.</p>`}</div></div>
 
     <details class="breakdown"><summary>Full ability breakdown &amp; gameplan</summary>
       <p class="gameplan"><b>Gameplan:</b> ${h.counteredBy}</p>
